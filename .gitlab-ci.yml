@@ -1,0 +1,33 @@
+stages:
+    - build
+    - deploy
+    - clean
+
+before_script:
+    - docker info
+
+docker_build:
+    stage: build
+    script:
+        - docker build -t vmware-api .
+    tags:
+        - vmware-api
+        - docker
+
+docker_deploy:
+    stage: deploy
+    script:
+        - sh ci-tools/deploy.sh
+    tags:
+        - vmware-api
+        - docker
+
+docker_clean_build:
+    stage: clean
+    script:
+        - docker rmi $(docker images | awk '/none/ {print $3}')
+    allow_failure: true
+    tags:
+        - vmware-api
+        - docker
+
