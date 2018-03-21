@@ -48,6 +48,11 @@ class Action(object):
         datacenters = vc_rootFolder.childEntity
         return datacenters
 
+    def v_get_object_type(self, vim_type):
+        content = self.v_server_connect().RetrieveContent()
+        return [item for item in content.viewManager.CreateContainerView(
+            content.rootFolder, [vim_type], recursive=True).view]
+
     def v_get_datacenter(self):
         """ Get storage cluster """
         datacenters = self.v_get_object()
@@ -210,10 +215,20 @@ class Action(object):
 
     #            print '%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s' %(host_name, vm_name, instance_UUID, bios_UUID, guest_os_name, connectionState, path_to_vm, guest_tools_status, memorySizeMB, numCpu, numVirtualDisks, disk_committed, disk_uncommitted, disk_unshared, powerState, overallStatus, last_booted_timestamp, ip_list, macAddress, prot_group)
 
+    def v_get_vm_template(self):
+        """ get vm template """
+        vms = self.v_get_object_type(vim.VirtualMachine)
+        tpls = []
+        for vm in vms:
+            if vm.config.template:
+                tpls.append(vm.name)
+        return tpls
+
     def v_server_disconnect(self):
         """ sign out """
         connect.Disconnect(self.v_server_connect())
         return True
+
 
 #if __name__ == '__main__':
 #    run = Action()

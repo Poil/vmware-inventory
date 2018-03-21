@@ -20,6 +20,20 @@ def vcenter(vcenter_name):
         return jsonify({'status': "error connecting to VCenter {name}".format(name=vcenter_name)})
 
 
+@app.route('/api/v1/vcenter/<string:vcenter_name>/template', methods=['GET'])
+def template(vcenter_name):
+    """ template """
+    try:
+        a = Action(
+            v_server=get_config(vcenter_name, 'ip'),
+            v_user=get_config(vcenter_name, 'user'),
+            v_passwd=get_config(vcenter_name, 'password')
+        )
+        return jsonify(res=a.v_get_vm_template())
+    except:
+        return jsonify({'status': 'error extracting template for VCenter {name}'.format(name=vcenter_name)})
+
+
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter', methods=['GET'])
 def datacenter(vcenter_name):
     """ datacenter """
