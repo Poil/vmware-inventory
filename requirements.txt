@@ -1,0 +1,6 @@
+flask
+PyYAML
+ssl
+pyvmomi
+requests
+json

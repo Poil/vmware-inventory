@@ -2,11 +2,9 @@
 # encoding:utf-8
 '''Based on vc-api to get related data in the cluster, as a data source for CMDB storage'''
 
-import sys
 import os
 import ssl
 import requests
-import json
 from pyVim import connect
 from pyVmomi import vim
 
