@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from app.action import Action
 from app.config import get_config
 import json
@@ -29,7 +29,9 @@ def template(vcenter_name):
             v_user=get_config(vcenter_name, 'user'),
             v_passwd=get_config(vcenter_name, 'password')
         )
-        return jsonify(res=a.v_get_vm_template())
+        ret = json.dumps(a.v_get_vm_template())
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
     except:
         return jsonify({'status': 'error extracting template for VCenter {name}'.format(name=vcenter_name)})
 
@@ -43,7 +45,9 @@ def datacenter(vcenter_name):
             v_user=get_config(vcenter_name, 'user'),
             v_passwd=get_config(vcenter_name, 'password')
         )
-        return jsonify(res=a.v_get_datacenter())
+        ret = json.dumps(a.v_get_datacenter())
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
     except:
         return jsonify({'status': 'error extracting datacenter for VCenter {name}'.format(name=vcenter_name)})
 
@@ -52,12 +56,18 @@ def datacenter(vcenter_name):
 def cluster(vcenter_name, datacenter_name):
     """ datastore """
     try:
+        oformat = request.args.get('format', default='full', type=str)
         a = Action(
             v_server=get_config(vcenter_name, 'ip'),
             v_user=get_config(vcenter_name, 'user'),
             v_passwd=get_config(vcenter_name, 'password')
         )
-        return jsonify(a.v_get_cluster(datacenter_name))
+        if oformat == 'full':
+            return jsonify(a.v_get_cluster(datacenter_name))
+        else:
+            ret = json.dumps(a.v_get_cluster(datacenter_name)[datacenter_name].keys())
+            resp = app.response_class(response=ret, status=200, mimetype="application/json")
+            return resp
     except:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
@@ -66,12 +76,18 @@ def cluster(vcenter_name, datacenter_name):
 def datastore(vcenter_name, datacenter_name):
     """ datastore """
     try:
+        oformat = request.args.get('format', default='full', type=str)
         a = Action(
             v_server=get_config(vcenter_name, 'ip'),
             v_user=get_config(vcenter_name, 'user'),
             v_passwd=get_config(vcenter_name, 'password')
         )
-        return jsonify(a.v_get_datastore(datacenter_name))
+        if oformat == 'full':
+            return jsonify(a.v_get_datastore(datacenter_name))
+        else:
+            ret = json.dumps(a.v_get_datastore(datacenter_name)[datacenter_name].keys())
+            resp = app.response_class(response=ret, status=200, mimetype="application/json")
+            return resp
     except:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
@@ -79,14 +95,23 @@ def datastore(vcenter_name, datacenter_name):
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/cluster/<string:cluster_name>/portgroup', methods=['GET'])
 def portgroup(vcenter_name, datacenter_name, cluster_name):
-    """ datastore """
+    """ portgroup """
     try:
+        oformat = request.args.get('format', default='full', type=str)
         a = Action(
             v_server=get_config(vcenter_name, 'ip'),
             v_user=get_config(vcenter_name, 'user'),
             v_passwd=get_config(vcenter_name, 'password')
         )
-        return jsonify(a.v_get_vhost_portgroup(cluster_name))
+        if oformat == 'full':
+            return jsonify(a.v_get_vhost_portgroup(cluster_name))
+        else:
+            vs = []
+            for vdportgroup, vswitch in a.v_get_vhost_portgroup(cluster_name).iteritems():
+                vs += vswitch.keys()
+            ret = json.dumps(vs)
+            resp = app.response_class(response=ret, status=200, mimetype="application/json")
+            return resp
     except:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
