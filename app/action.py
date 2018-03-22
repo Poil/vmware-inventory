@@ -134,7 +134,7 @@ class Action(object):
 
 
     #def v_get_vhost_vswitch(self, filter_cl):
-    #    # Get the host's vswitch based on host
+    #    """ Get the host's vswitch based on host """
     #    host_list = self.vi_get_vhost(filter_cl)
     #    print 'host_name vs_name vs_key numPorts is_bond numPortsAvailable physicalDevice'
     #    for host in host_list:
@@ -158,29 +158,64 @@ class Action(object):
     #        except AttributeError:
     #            pass
 
-    def v_get_vhost_portgroup(self, filter_cl=None):
-        """ Get portgroup based on host and associate with vswitch key """
-        host_list = self.vi_get_vhost(filter_cl)
-        pgs = {}
-        for host in host_list:
-            try:
-                for ps in host.config.network.portgroup:
-                    vswitch_name = ps.spec.vswitchName
-                    if vswitch_name not in pgs:
-                        pgs[vswitch_name] = {}
+    def v_get_vdswitch(self, filter_dc=None):
+        datacenters = self.v_get_object()
+        vds = {}
+        for dc in datacenters:
+            dc_name = dc.name
+            if filter_dc is None or filter_dc == dc_name:
+                if filter_dc is None or filter_dc == dc_name:
+                    vds[dc_name] = []
+                    vdswitches = dc.networkFolder.childEntity
+                    for vdswitch in vdswitches:
+                        if isinstance(vdswitch, vim.DistributedVirtualSwitch):
+                            summary = vdswitch.summary
+                            vds[dc_name].append(summary.name)
+        return vds
 
-                    ps_name = ps.spec.name
-                    if ps_name not in pgs[vswitch_name]:
-                        pgs[vswitch_name][ps_name] = {}
+    def vi_get_vdswitch(self, filter_dc, filter_vdswitch):
+        datacenters = self.v_get_object()
+        for dc in datacenters:
+            dc_name = dc.name
+            if filter_dc == dc_name:
+                vdswitches = dc.networkFolder.childEntity
+                for vdswitch in vdswitches:
+                    if isinstance(vdswitch, vim.DistributedVirtualSwitch):
+                        if filter_vdswitch == vdswitch.summary.name:
+                            return vdswitch
+        return None
 
-                    for m in ['name', 'vlanId']:
-                        pgs[vswitch_name][ps_name][m] = getattr(ps.spec, m)
-                    for m in ['key']:
-                        pgs[vswitch_name][ps_name][m] = getattr(ps, m)
 
-            except AttributeError:
-                pass
-        return pgs
+    def v_get_vdportgroup(self, filter_dc, vdswitch_name):
+        vdswitch = self.vi_get_vdswitch(filter_dc, vdswitch_name)
+        print [vdportgroup.name for vdportgroup in vdswitch.portgroup]
+        return [vdportgroup.name for vdportgroup in vdswitch.portgroup]
+
+
+    #def v_get_vhost_portgroup(self, filter_cl=None):
+    #    """ Get portgroup based on host and associate with vswitch key """
+    #    host_list = self.vi_get_vhost(filter_cl)
+    #    pgs = {}
+    #    for host in host_list:
+    #        try:
+    #            for ps in host.config.network.portgroup:
+    #                print ps.__dict__
+    #                vswitch_name = ps.spec.vswitchName
+    #                if vswitch_name not in pgs:
+    #                    pgs[vswitch_name] = {}
+
+    #                ps_name = ps.spec.name
+    #                if ps_name not in pgs[vswitch_name]:
+    #                    pgs[vswitch_name][ps_name] = {}
+
+    #                for m in ['name', 'vlanId']:
+    #                    pgs[vswitch_name][ps_name][m] = getattr(ps.spec, m)
+    #                for m in ['key']:
+    #                    pgs[vswitch_name][ps_name][m] = getattr(ps, m)
+
+    #        except AttributeError:
+    #            pass
+    #    return pgs
 
     #def v_get_vms(self, filter_cl=None):
     #    """ According to the host to get the relevant information of vm """

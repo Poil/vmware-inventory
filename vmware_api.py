@@ -107,10 +107,10 @@ def datastore(vcenter_name, datacenter_name):
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
 
-@app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/cluster/<string:cluster_name>/portgroup', methods=['GET'])
+@app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/vdswitch', methods=['GET'])
 @cache.cached(timeout=7200, key_prefix=make_cache_key)
-def portgroup(vcenter_name, datacenter_name, cluster_name):
-    """ portgroup """
+def vdswitch(vcenter_name, datacenter_name):
+    """ vsdswitch """
     try:
         oformat = request.args.get('format', default='full', type=str)
         a = Action(
@@ -119,18 +119,33 @@ def portgroup(vcenter_name, datacenter_name, cluster_name):
             v_passwd=get_config(vcenter_name, 'password')
         )
         if oformat == 'full':
-            return jsonify(a.v_get_vhost_portgroup(cluster_name))
+            return jsonify(a.v_get_vdswitch())
         else:
-            vs = []
-            for vdportgroup, vswitch in a.v_get_vhost_portgroup(cluster_name).iteritems():
-                vs += vswitch.keys()
-            ret = json.dumps(vs)
+            ret = json.dumps(a.v_get_vdswitch(datacenter_name)[datacenter_name].keys())
             resp = app.response_class(response=ret, status=200, mimetype="application/json")
             return resp
     except:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
+
+@app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/vdswitch/<string:vdswitch_name>/vdportgroup', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
+def vdportgroup(vcenter_name, vdswitch_name, datacenter_name):
+    """ vdportgroup """
+    try:
+        oformat = request.args.get('format', default='full', type=str)
+        a = Action(
+            v_server=get_config(vcenter_name, 'ip'),
+            v_user=get_config(vcenter_name, 'user'),
+            v_passwd=get_config(vcenter_name, 'password')
+        )
+        ret = json.dumps(a.v_get_vdportgroup(datacenter_name, vdswitch_name))
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except:
+        return jsonify({'status': "error extracting vdportgroup for VCenter {vcenter_name} and Datacenter \
+            {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
 
 if __name__ == '__main__':
