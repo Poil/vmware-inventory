@@ -1,4 +1,5 @@
 flask
+Flask-Cache
 PyYAML
 pyvmomi
 requests

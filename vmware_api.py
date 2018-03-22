@@ -1,9 +1,18 @@
 from flask import Flask, jsonify, request
+from flask.ext.cache import Cache
 from app.action import Action
 from app.config import get_config
 import json
 
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+def make_cache_key(*args, **kwargs):
+    """ make cache key """
+    path = request.path
+    args = str(hash(frozenset(request.args.items())))
+    return (path + args).encode('utf-8')
+
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>', methods=['GET'])
 def vcenter(vcenter_name):
@@ -21,6 +30,7 @@ def vcenter(vcenter_name):
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/template', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
 def template(vcenter_name):
     """ template """
     try:
@@ -37,6 +47,7 @@ def template(vcenter_name):
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
 def datacenter(vcenter_name):
     """ datacenter """
     try:
@@ -53,6 +64,7 @@ def datacenter(vcenter_name):
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/cluster', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
 def cluster(vcenter_name, datacenter_name):
     """ datastore """
     try:
@@ -72,7 +84,9 @@ def cluster(vcenter_name, datacenter_name):
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
+
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/datastore', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
 def datastore(vcenter_name, datacenter_name):
     """ datastore """
     try:
@@ -94,6 +108,7 @@ def datastore(vcenter_name, datacenter_name):
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/cluster/<string:cluster_name>/portgroup', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
 def portgroup(vcenter_name, datacenter_name, cluster_name):
     """ portgroup """
     try:
