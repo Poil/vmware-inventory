@@ -121,7 +121,7 @@ def vdswitch(vcenter_name, datacenter_name):
         if oformat == 'full':
             return jsonify(a.v_get_vdswitch())
         else:
-            ret = json.dumps(a.v_get_vdswitch(datacenter_name)[datacenter_name].keys())
+            ret = json.dumps(a.v_get_vdswitch(datacenter_name)[datacenter_name])
             resp = app.response_class(response=ret, status=200, mimetype="application/json")
             return resp
     except:
