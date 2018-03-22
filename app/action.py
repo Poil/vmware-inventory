@@ -69,7 +69,7 @@ class Action(object):
                 datastores = dc.datastoreFolder.childEntity
                 for datastore in datastores:
                     summary = datastore.summary
-                    ds[dc_name] = {summary.name: {}}
+                    ds[dc_name][summary.name] = {}
                     for m in ['capacity', 'freeSpace']:
                         ds[dc_name][summary.name][m] = getattr(summary, m)
         return ds

@@ -66,7 +66,7 @@ def datacenter(vcenter_name):
 @app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/cluster', methods=['GET'])
 @cache.cached(timeout=7200, key_prefix=make_cache_key)
 def cluster(vcenter_name, datacenter_name):
-    """ datastore """
+    """ cluster """
     try:
         oformat = request.args.get('format', default='full', type=str)
         a = Action(
