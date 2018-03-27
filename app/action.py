@@ -2,10 +2,10 @@
 # encoding:utf-8
 '''Based on vc-api to get related data in the cluster, as a data source for CMDB storage'''
 
-import os
 import ssl
 import requests
 from pyVim import connect
+from pyVim.task import WaitForTask
 from pyVmomi import vim
 
 
@@ -49,6 +49,7 @@ class Action(object):
         return datacenters
 
     def v_get_object_type(self, vim_type):
+        """ get object type """
         content = self.v_server_connect().RetrieveContent()
         return [item for item in content.viewManager.CreateContainerView(
             content.rootFolder, [vim_type], recursive=True).view]
@@ -113,67 +114,23 @@ class Action(object):
                     host_list.append(host)
         return host_list
 
-    #def v_get_vhost_physical_net(self, filter_cl=None):
-    #    """ Get host's physical network information based on host """
-    #    host_list = self.vi_get_vhost(filter_cl)
-    #    print 'host_name device pci driver wakeOnLanSupported mac autoNegotiateSupported'
-    #    for host in host_list:
-    #        host_name = host.name
-    #        try:
-    #            for pnic in host.config.network.pnic:
-    #                device = pnic.device
-    #                pci = pnic.pci
-    #                driver = pnic.driver
-    #                wakeOnLanSupported = pnic.wakeOnLanSupported
-    #                mac = pnic.mac
-    #                autoNegotiateSupported = pnic.autoNegotiateSupported
-
-    #                print host_name,device,pci,driver,wakeOnLanSupported,mac,autoNegotiateSupported
-    #        except AttributeError:
-    #            pass
-
-
-    #def v_get_vhost_vswitch(self, filter_cl):
-    #    """ Get the host's vswitch based on host """
-    #    host_list = self.vi_get_vhost(filter_cl)
-    #    print 'host_name vs_name vs_key numPorts is_bond numPortsAvailable physicalDevice'
-    #    for host in host_list:
-    #        try:
-    #            for vs in host.config.network.vswitch:
-    #                host_name = host.name
-    #                vs_name = vs.name
-    #                vs_key = vs.key
-    #                numPorts = vs.numPorts
-    #                is_bond = 0
-    #                numPortsAvailable = vs.numPortsAvailable
-    #                numnicDevice = len(vs.spec.bridge.nicDevice)
-    #                physicalDevice = []
-    #                if numnicDevice == 2:
-    #                    is_bond = 1
-    #                    physicalDevice.append(vs.spec.bridge.nicDevice[0])
-    #                    physicalDevice.append(vs.spec.bridge.nicDevice[1])
-    #                else:
-    #                    physicalDevice.append(vs.spec.bridge.nicDevice[0])
-    #                print host_name, vs_name, vs_key, numPorts, is_bond, numPortsAvailable, physicalDevice
-    #        except AttributeError:
-    #            pass
-
     def v_get_vdswitch(self, filter_dc=None):
+        """ vdswitch """
         datacenters = self.v_get_object()
         vds = {}
         for dc in datacenters:
             dc_name = dc.name
             if filter_dc is None or filter_dc == dc_name:
-                if filter_dc is None or filter_dc == dc_name:
-                    vds[dc_name] = []
-                    vdswitches = dc.networkFolder.childEntity
-                    for vdswitch in vdswitches:
-                        if isinstance(vdswitch, vim.DistributedVirtualSwitch):
-                            summary = vdswitch.summary
-                            vds[dc_name].append(summary.name)
+                vds[dc_name] = []
+                vdswitches = dc.networkFolder.childEntity
+                for vdswitch in vdswitches:
+                    if isinstance(vdswitch, vim.DistributedVirtualSwitch):
+                        summary = vdswitch.summary
+                        vds[dc_name].append(summary.name)
         return vds
 
     def vi_get_vdswitch(self, filter_dc, filter_vdswitch):
+        """ internal function vdswitch """
         datacenters = self.v_get_object()
         for dc in datacenters:
             dc_name = dc.name
@@ -187,68 +144,27 @@ class Action(object):
 
 
     def v_get_vdportgroup(self, filter_dc, vdswitch_name):
+        """ vdportgroup """
         vdswitch = self.vi_get_vdswitch(filter_dc, vdswitch_name)
         print [vdportgroup.name for vdportgroup in vdswitch.portgroup]
         return [vdportgroup.name for vdportgroup in vdswitch.portgroup]
 
-
-    #def v_get_vhost_portgroup(self, filter_cl=None):
-    #    """ Get portgroup based on host and associate with vswitch key """
-    #    host_list = self.vi_get_vhost(filter_cl)
-    #    pgs = {}
-    #    for host in host_list:
-    #        try:
-    #            for ps in host.config.network.portgroup:
-    #                print ps.__dict__
-    #                vswitch_name = ps.spec.vswitchName
-    #                if vswitch_name not in pgs:
-    #                    pgs[vswitch_name] = {}
-
-    #                ps_name = ps.spec.name
-    #                if ps_name not in pgs[vswitch_name]:
-    #                    pgs[vswitch_name][ps_name] = {}
-
-    #                for m in ['name', 'vlanId']:
-    #                    pgs[vswitch_name][ps_name][m] = getattr(ps.spec, m)
-    #                for m in ['key']:
-    #                    pgs[vswitch_name][ps_name][m] = getattr(ps, m)
-
-    #        except AttributeError:
-    #            pass
-    #    return pgs
-
-    #def v_get_vms(self, filter_cl=None):
-    #    """ According to the host to get the relevant information of vm """
-    #    host_list = self.vi_get_vhost(filter_cl)
-    #    print 'host_name;vm_name;instance_UUID;bios_UUID;guest_os_name;connectionState;path_to_vm;guest_tools_status;memorySizeMB;numCpu;numVirtualDisks;disk_committed;disk_uncommitted;disk_unshared;powerState;overallStatus;last_booted_timestamp;ip_list;macAddress;prot_group'
-    #    for host in host_list:
-    #        for vm in host.vm:
-    #            host_name = host.name
-    #            vm_name = vm.name
-    #            instance_UUID = vm.summary.config.instanceUuid
-    #            bios_UUID = vm.summary.config.uuid
-    #            guest_os_name = vm.summary.config.guestFullName
-    #            connectionState = vm.summary.runtime.connectionState
-    #            path_to_vm = vm.summary.config.vmPathName
-    #            guest_tools_status = vm.guest.toolsStatus
-    #            memorySizeMB = vm.summary.config.memorySizeMB
-    #            numCpu = vm.summary.config.numCpu
-    #            numVirtualDisks = vm.summary.config.numVirtualDisks
-    #            disk_committed = vm.summary.storage.committed
-    #            disk_uncommitted = vm.summary.storage.uncommitted
-    #            disk_unshared = vm.summary.storage.unshared
-    #            powerState = vm.summary.runtime.powerState
-    #            overallStatus = vm.summary.overallStatus
-    #            last_booted_timestamp = vm.runtime.bootTime
-    #            ip_list = []
-    #            for vnic in vm.guest.net:
-    #                prot_group = vnic.network
-    #                ips = vnic.ipAddress
-    #                for ip in ips:
-    #                    ip_list.append(ip)
-    #                macAddress = vnic.macAddress
-
-    #            print '%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s' %(host_name, vm_name, instance_UUID, bios_UUID, guest_os_name, connectionState, path_to_vm, guest_tools_status, memorySizeMB, numCpu, numVirtualDisks, disk_committed, disk_uncommitted, disk_unshared, powerState, overallStatus, last_booted_timestamp, ip_list, macAddress, prot_group)
+    def v_get_folder(self, filter_dc=None, filter_ds=None):
+        """ folder """
+        fds = {}
+        spec = vim.host.DatastoreBrowser.SearchSpec(query=[vim.host.DatastoreBrowser.FolderQuery()])
+        for dc in self.v_server_connect().content.rootFolder.childEntity:
+            fds[dc.name] = {}
+            if filter_dc is None or filter_dc == dc.name:
+                for ds in dc.datastore:
+                    fds[dc.name][ds.name] = []
+                    if filter_ds is None or filter_ds == ds.name:
+                        task = ds.browser.SearchSubFolders("[%s]" % ds.name, spec)
+                        WaitForTask(task)
+                        for result in task.info.result:
+                            for fileInfo in result.file:
+                                fds[dc.name][ds.name].append(result.folderPath+'/'+fileInfo.path)
+        return fds
 
     def v_get_vm_template(self):
         """ get vm template """
@@ -263,19 +179,3 @@ class Action(object):
         """ sign out """
         connect.Disconnect(self.v_server_connect())
         return True
-
-
-#if __name__ == '__main__':
-#    run = Action()
-#    run.v_check_login()
-#
-#    print json.dumps(run.v_get_datacenter())
-#    print json.dumps(run.v_get_datastore())
-#    print json.dumps(run.v_get_cluster())
-#    #run.v_get_vhost()
-#    #run.v_get_vhost_physical_net()
-#    #run.v_get_vhost_vswitch()
-#    print json.dumps(run.v_get_vhost_portgroup('FRFSSL-LABCVY-CLUSTER-CUSTOMER'))
-#    #run.v_get_vms()
-#    run.v_server_disconnect()
-#    del run
