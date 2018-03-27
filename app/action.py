@@ -166,6 +166,20 @@ class Action(object):
                                 fds[dc.name][ds.name].append(result.folderPath+'/'+fileInfo.path)
         return fds
 
+    def v_get_vmfolder(self, filter_dc=None):
+        """ vm folder """
+        datacenters = self.v_server_connect().content.rootFolder.childEntity
+        vmfds = {}
+        for dc in datacenters:
+            vmFolders = dc.vmFolder.childEntity
+            if filter_dc is None or filter_dc == dc.name:
+                return [folder.name for folder in vmFolders]
+            else:
+                for folder in vmFolders:
+                    vmfds[dc.name] = []
+                    vmfds[dc.name].append(folder.name)
+                
+
     def v_get_vm_template(self):
         """ get vm template """
         vms = self.v_get_object_type(vim.VirtualMachine)

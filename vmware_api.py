@@ -170,5 +170,27 @@ def folder(vcenter_name, datacenter_name, datastore_name):
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
 
+@app.route('/api/v1/vcenter/<string:vcenter_name>/datacenter/<string:datacenter_name>/vmfolder', methods=['GET'])
+@cache.cached(timeout=7200, key_prefix=make_cache_key)
+def vmfolder(vcenter_name, datacenter_name):
+    """ folder """
+    try:
+        oformat = request.args.get('format', default='full', type=str)
+        a = Action(
+            v_server=get_config(vcenter_name, 'ip'),
+            v_user=get_config(vcenter_name, 'user'),
+            v_passwd=get_config(vcenter_name, 'password')
+        )
+        if oformat == 'full':
+            return jsonify(a.v_get_vmfolder(datacenter_name))
+        else:
+            ret = json.dumps(a.v_get_vmfolder(datacenter_name))
+            resp = app.response_class(response=ret, status=200, mimetype="application/json")
+            return resp
+    except:
+        return jsonify({'status': "error extracting vmfolder for VCenter {vcenter_name} and Datacenter \
+            {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
