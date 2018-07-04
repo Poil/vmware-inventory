@@ -68,7 +68,7 @@ class Action(object):
             if filter_dc is None or filter_dc == dc_name:
                 ds[dc_name] = {}
                 datastores = dc.datastoreFolder.childEntity
-                for datastore in datastores:
+                for datastore in sorted(datastores):
                     summary = datastore.summary
                     ds[dc_name][summary.name] = {}
                     for m in ['capacity', 'freeSpace']:
@@ -83,7 +83,7 @@ class Action(object):
             clusters = dc.hostFolder.childEntity
             for cluster in clusters:
                 cluster_list.append(cluster)
-        return cluster_list
+        return sorted(cluster_list)
 
     def v_get_cluster(self, filter_dc=None):
         """ Get the cluster name, memory, cpu, status, and other related attributes and return the cluster as a list """
@@ -94,7 +94,7 @@ class Action(object):
             cls[dc.name] = {}
             if filter_dc is None or filter_dc == dc.name:
                 clusters = dc.hostFolder.childEntity
-                for cluster in clusters:
+                for cluster in sorted(clusters):
                     name = cluster.name
                     cls[dc.name][name] = {}
                     summary = cluster.summary
@@ -112,7 +112,7 @@ class Action(object):
                 hosts = cluster.host
                 for host in hosts:
                     host_list.append(host)
-        return host_list
+        return sorted(host_list)
 
     def v_get_vdswitch(self, filter_dc=None):
         """ vdswitch """
@@ -123,7 +123,7 @@ class Action(object):
             if filter_dc is None or filter_dc == dc_name:
                 vds[dc_name] = []
                 vdswitches = dc.networkFolder.childEntity
-                for vdswitch in vdswitches:
+                for vdswitch in sorted(vdswitches):
                     if isinstance(vdswitch, vim.DistributedVirtualSwitch):
                         summary = vdswitch.summary
                         vds[dc_name].append(summary.name)
@@ -146,8 +146,7 @@ class Action(object):
     def v_get_vdportgroup(self, filter_dc, vdswitch_name):
         """ vdportgroup """
         vdswitch = self.vi_get_vdswitch(filter_dc, vdswitch_name)
-        print [vdportgroup.name for vdportgroup in vdswitch.portgroup]
-        return [vdportgroup.name for vdportgroup in vdswitch.portgroup]
+        return sorted([vdportgroup.name for vdportgroup in vdswitch.portgroup])
 
     def v_get_folder(self, filter_dc=None, filter_ds=None):
         """ folder """
@@ -162,7 +161,7 @@ class Action(object):
                         task = ds.browser.SearchSubFolders("[%s]" % ds.name, spec)
                         WaitForTask(task)
                         for result in task.info.result:
-                            for fileInfo in result.file:
+                            for fileInfo in sorted(result.file):
                                 fds[dc.name][ds.name].append(result.folderPath+'/'+fileInfo.path)
         return fds
 
@@ -173,12 +172,12 @@ class Action(object):
         for dc in datacenters:
             vmFolders = dc.vmFolder.childEntity
             if filter_dc is None or filter_dc == dc.name:
-                return [folder.name for folder in vmFolders]
+                return sorted([folder.name for folder in vmFolders])
             else:
-                for folder in vmFolders:
+                for folder in sorted(vmFolders):
                     vmfds[dc.name] = []
                     vmfds[dc.name].append(folder.name)
-                
+
 
     def v_get_vm_template(self):
         """ get vm template """
@@ -187,7 +186,7 @@ class Action(object):
         for vm in vms:
             if vm.config.template:
                 tpls.append(vm.name)
-        return tpls
+        return sorted(tpls)
 
     def v_server_disconnect(self):
         """ sign out """

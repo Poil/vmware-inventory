@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from flask.ext.cache import Cache
+from flask_caching import Cache
 from app.action import Action
 from app.config import get_config
 import json
