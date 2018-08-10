@@ -18,7 +18,7 @@ def make_cache_key(*args, **kwargs):
 def vcenters():
     """ vcenter """
     try:
-        return jsonify(get_vcenters)
+        return jsonify(get_vcenters())
     except Exception:
         return jsonify({'status': "error reading configuration file"})
 
