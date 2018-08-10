@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_caching import Cache
 from app.action import Action
-from app.config import get_config
+from app.config import get_config, get_vcenters
 import json
 
 app = Flask(__name__)
@@ -12,6 +12,15 @@ def make_cache_key(*args, **kwargs):
     path = request.path
     args = str(hash(frozenset(request.args.items())))
     return (path + args).encode('utf-8')
+
+
+@app.route('/api/v1/vcenter', methods=['GET'])
+def vcenters():
+    """ vcenter """
+    try:
+        return jsonify(get_vcenters)
+    except Exception:
+        return jsonify({'status': "error reading configuration file"})
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>', methods=['GET'])
@@ -25,7 +34,7 @@ def vcenter(vcenter_name):
         )
         a.v_check_login()
         return jsonify({'status': 'success'})
-    except:
+    except Exception:
         return jsonify({'status': "error connecting to VCenter {name}".format(name=vcenter_name)})
 
 
@@ -42,7 +51,7 @@ def template(vcenter_name):
         ret = json.dumps(a.v_get_vm_template())
         resp = app.response_class(response=ret, status=200, mimetype="application/json")
         return resp
-    except:
+    except Exception:
         return jsonify({'status': 'error extracting template for VCenter {name}'.format(name=vcenter_name)})
 
 
@@ -59,7 +68,7 @@ def datacenter(vcenter_name):
         ret = json.dumps(a.v_get_datacenter())
         resp = app.response_class(response=ret, status=200, mimetype="application/json")
         return resp
-    except:
+    except Exception:
         return jsonify({'status': 'error extracting datacenter for VCenter {name}'.format(name=vcenter_name)})
 
 
@@ -76,11 +85,10 @@ def cluster(vcenter_name, datacenter_name):
         )
         if oformat == 'full':
             return jsonify(a.v_get_cluster(datacenter_name))
-        else:
-            ret = json.dumps(a.v_get_cluster(datacenter_name)[datacenter_name].keys())
-            resp = app.response_class(response=ret, status=200, mimetype="application/json")
-            return resp
-    except:
+        ret = json.dumps(a.v_get_cluster(datacenter_name)[datacenter_name].keys())
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except Exception:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
@@ -102,7 +110,7 @@ def datastore(vcenter_name, datacenter_name):
             ret = json.dumps(a.v_get_datastore(datacenter_name)[datacenter_name].keys())
             resp = app.response_class(response=ret, status=200, mimetype="application/json")
             return resp
-    except:
+    except Exception:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
@@ -120,11 +128,10 @@ def vdswitch(vcenter_name, datacenter_name):
         )
         if oformat == 'full':
             return jsonify(a.v_get_vdswitch())
-        else:
-            ret = json.dumps(a.v_get_vdswitch(datacenter_name)[datacenter_name])
-            resp = app.response_class(response=ret, status=200, mimetype="application/json")
-            return resp
-    except:
+        ret = json.dumps(a.v_get_vdswitch(datacenter_name)[datacenter_name])
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except Exception:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
@@ -143,7 +150,7 @@ def vdportgroup(vcenter_name, vdswitch_name, datacenter_name):
         ret = json.dumps(a.v_get_vdportgroup(datacenter_name, vdswitch_name))
         resp = app.response_class(response=ret, status=200, mimetype="application/json")
         return resp
-    except:
+    except Exception:
         return jsonify({'status': "error extracting vdportgroup for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
@@ -161,11 +168,10 @@ def folder(vcenter_name, datacenter_name, datastore_name):
         )
         if oformat == 'full':
             return jsonify(a.v_get_folder(datacenter_name, datastore_name))
-        else:
-            ret = json.dumps(a.v_get_folder(datacenter_name, datastore_name)[datacenter_name][datastore_name])
-            resp = app.response_class(response=ret, status=200, mimetype="application/json")
-            return resp
-    except:
+        ret = json.dumps(a.v_get_folder(datacenter_name, datastore_name)[datacenter_name][datastore_name])
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except Exception:
         return jsonify({'status': "error extracting datastore for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
@@ -183,11 +189,10 @@ def vmfolder(vcenter_name, datacenter_name):
         )
         if oformat == 'full':
             return jsonify(a.v_get_vmfolder(datacenter_name))
-        else:
-            ret = json.dumps(a.v_get_vmfolder(datacenter_name))
-            resp = app.response_class(response=ret, status=200, mimetype="application/json")
-            return resp
-    except:
+        ret = json.dumps(a.v_get_vmfolder(datacenter_name))
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except Exception:
         return jsonify({'status': "error extracting vmfolder for VCenter {vcenter_name} and Datacenter \
             {datacenter_name}".format(vcenter_name=vcenter_name, datacenter_name=datacenter_name)})
 
