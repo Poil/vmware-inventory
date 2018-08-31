@@ -41,9 +41,14 @@ def vcenter(vcenter_name):
 @app.route('/api/v1/vcenter/<string:vcenter_name>/<string:prop_name>', methods=['GET'])
 def vcenter_property(vcenter_name, prop_name):
     """ vcenter """
-    ret = json.dumps(get_config(vcenter_name, prop_name))
-    resp = app.response_class(response=ret, status=200, mimetype="application/json")
-    return resp
+    try:
+        ret = json.dumps(get_config(vcenter_name, prop_name))
+        resp = app.response_class(response=ret, status=200, mimetype="application/json")
+        return resp
+    except Exception:
+        return jsonify({'status': "error getting property {prop_name} for VCenter {name}".format(
+            name=vcenter_name,
+            prop_name=prop_name)})
 
 
 @app.route('/api/v1/vcenter/<string:vcenter_name>/template', methods=['GET'])
