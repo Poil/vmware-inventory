@@ -38,6 +38,15 @@ def vcenter(vcenter_name):
         return jsonify({'status': "error connecting to VCenter {name}".format(name=vcenter_name)})
 
 
+@app.route('/api/v1/vcenter/<string:vcenter_name>/<string:prop_name>', methods=['GET'])
+def vcenter_property(vcenter_name, prop_name):
+    """ vcenter """
+    try:
+        return json.dumps(get_vcenters()[vcenter_name][prop_name])
+    except Exception:
+        return jsonify({'status': "error reading configuration file"})
+
+
 @app.route('/api/v1/vcenter/<string:vcenter_name>/template', methods=['GET'])
 @cache.cached(timeout=7200, key_prefix=make_cache_key)
 def template(vcenter_name):
